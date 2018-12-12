@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: net.sf.ingenme:core:1.0.10-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/ingenme/core/1.0.10-SNAPSHOT/core-1.0.10-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/ingenme/core/1.0.10-SNAPSHOT/core-1.0.10-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/ingenme/core/1.0.10-SNAPSHOT/core-1.0.10-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

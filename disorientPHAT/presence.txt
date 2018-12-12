@@ -1,0 +1,8 @@
+timestamp id elapsedGen elapsedPart status
+1514770206 PreSen-Bedroom1-1 6 6 true
+1514770219 PreSen-Bedroom1-1 13 13 false
+1514770220 PreSen-Bedroom1-1 1 1 true
+1514770224 PreSen-Bedroom1-1 4 4 false
+1514770226 PreSen-Bathroom1-1 2 26 true
+1514770238 PreSen-Bathroom1-1 12 12 false
+1514770241 PreSen-Bedroom1-1 3 17 true

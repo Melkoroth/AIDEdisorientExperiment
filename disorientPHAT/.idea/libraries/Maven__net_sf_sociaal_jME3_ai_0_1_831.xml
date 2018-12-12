@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: net.sf.sociaal:jME3-ai:0.1.831">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/sociaal/jME3-ai/0.1.831/jME3-ai-0.1.831.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/sociaal/jME3-ai/0.1.831/jME3-ai-0.1.831-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/sociaal/jME3-ai/0.1.831/jME3-ai-0.1.831-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
