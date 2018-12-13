@@ -110,7 +110,7 @@ public class DisorientPHAT implements PHATInitializer, PHATCommandListener, Sens
 
     @Override
     public void initWorld(WorldConfigurator worldConfig) {
-        worldConfig.setTime(2018, 1, 1, 2, 30, 0);
+        worldConfig.setTime(2018, 1, 1, 14, 30, 0);
         worldConfig.setTimeVisible(true);
         worldConfig.setLandType(WorldAppState.LandType.Grass);
     }

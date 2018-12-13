@@ -110,7 +110,7 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
 
     @Override
     public void initWorld(WorldConfigurator worldConfig) {
-        worldConfig.setTime(2018, 1, 1, 2, 30, 0);
+        worldConfig.setTime(2018, 1, 1, 14, 30, 0);
         worldConfig.setTimeVisible(true);
         worldConfig.setLandType(WorldAppState.LandType.Grass);
     }
@@ -169,16 +169,21 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         //Declare agent
         Agent agent = new HumanAgent(bodyId);
 
-        MoveToSpace moveToKitchen1 = new MoveToSpace(agent, "GoToKitchen1", "Kitchen");
+        MoveToSpace moveToKitchen2 = new MoveToSpace(agent, "GoToKitchen1", "Kitchen");
 
-        UseObjectAutomaton useSink1 = new UseObjectAutomaton(agent, "Sink");
-        useSink1.setFinishCondition(new TimerFinishedCondition(0, 5, 0));
+        UseObjectAutomaton useSink2 = new UseObjectAutomaton(agent, "Sink");
+        useSink2.setFinishCondition(new TimerFinishedCondition(0, 5, 0));
+        MoveToSpace moveToLiving2 = new MoveToSpace(agent, "GoToLiving2", "LivingRoom");
+        DoNothing wait2 = new DoNothing(agent, "wait2");
+        wait2.setFinishCondition(new TimerFinishedCondition(0,0,5));
 
         //Create and populate Finite State Machine
         FSM fsm = new FSM(agent);
-        fsm.registerStartState(moveToKitchen1);
-        fsm.registerTransition(moveToKitchen1, useSink1);
-        fsm.registerFinalState(useSink1);
+        fsm.registerStartState(moveToKitchen2);
+        fsm.registerTransition(moveToKitchen2, useSink2);
+        fsm.registerTransition(useSink2, moveToLiving2);
+        fsm.registerTransition(moveToLiving2, wait2);
+        fsm.registerFinalState(wait2);
 
         fsm.addListener(new AutomatonIcon());
         //Link FSM with agent
