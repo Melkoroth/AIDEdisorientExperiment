@@ -1,6 +1,7 @@
 package phat;
 
 import java.io.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import javax.swing.JFrame;
@@ -169,21 +170,60 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         //Declare agent
         Agent agent = new HumanAgent(bodyId);
 
-        MoveToSpace moveToKitchen2 = new MoveToSpace(agent, "GoToKitchen1", "Kitchen");
 
-        UseObjectAutomaton useSink2 = new UseObjectAutomaton(agent, "Sink");
+
+        /*UseObjectAutomaton useSink2 = new UseObjectAutomaton(agent, "Sink");
         useSink2.setFinishCondition(new TimerFinishedCondition(0, 5, 0));
         MoveToSpace moveToLiving2 = new MoveToSpace(agent, "GoToLiving2", "LivingRoom");
         DoNothing wait2 = new DoNothing(agent, "wait2");
-        wait2.setFinishCondition(new TimerFinishedCondition(0,0,5));
+        wait2.setFinishCondition(new TimerFinishedCondition(0,0,5));*/
+
+        //Get some seconds
+        //int randomNum = ThreadLocalRandom.current().nextInt(30, 300);
+
 
         //Create and populate Finite State Machine
         FSM fsm = new FSM(agent);
-        fsm.registerStartState(moveToKitchen2);
+
+        //MoveToSpace moveToKitchen2 = new MoveToSpace(agent, "GoToKitchen1", "Kitchen");
+        //fsm.registerStartState(moveToKitchen2);
+
+        /*UseObjectAutomaton useSink2 = new UseObjectAutomaton(agent, "Sink");
+        useSink2.setFinishCondition(new TimerFinishedCondition(0, ThreadLocalRandom.current().nextInt(1, 5), 0));
+        fsm.registerTransition(moveToKitchen2, useSink2);
+        MoveToSpace moveToLiving2 = new MoveToSpace(agent, "GoToLiving2", "LivingRoom");
+        fsm.registerTransition(useSink2, moveToLiving2);
+        DoNothing wait2 = new DoNothing(agent, "wait2");
+        wait2.setFinishCondition(new TimerFinishedCondition(0,ThreadLocalRandom.current().nextInt(1, 5),0));
+        fsm.registerTransition(moveToLiving2, wait2);
+        MoveToSpace moveToBedroom2 = new MoveToSpace(agent, "GoToBedroom2", "BedRoom1RightSide");
+        fsm.registerTransition(useSink2, moveToLiving2);
+        fsm.registerTransition(wait2, moveToKitchen2);
+
+
+
+        useSink2.setFinishCondition(new TimerFinishedCondition(0, 0, ThreadLocalRandom.current().nextInt(1, 5)));
         fsm.registerTransition(moveToKitchen2, useSink2);
         fsm.registerTransition(useSink2, moveToLiving2);
         fsm.registerTransition(moveToLiving2, wait2);
-        fsm.registerFinalState(wait2);
+        wait2.setFinishCondition(new TimerFinishedCondition(0,0,ThreadLocalRandom.current().nextInt(30, 300)));
+        fsm.registerTransition(wait2, moveToKitchen2);*/
+
+        DoNothing waitzIni = new DoNothing(agent, "waitzIni");
+        waitzIni.setFinishCondition(new TimerFinishedCondition(0,0,5));
+        fsm.registerStartState(waitzIni);
+
+        SimpleState prevState = waitzIni;
+        for (int i = 0; i < 100; i++) {
+            SimpleState state = doSomethingRandom(agent, fsm, prevState, i);
+            prevState = state;
+        }
+
+        //DoNothing waitz = new DoNothing(agent, "waitz");
+        //waitz.setFinishCondition(new TimerFinishedCondition(0,0,5));
+        DoNothing waitzEnd = new DoNothing(agent, "waitzEnd");
+        waitzEnd.setFinishCondition(new TimerFinishedCondition(0,0,5));
+        fsm.registerFinalState(waitzEnd);
 
         fsm.addListener(new AutomatonIcon());
         //Link FSM with agent
@@ -196,6 +236,74 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         agentsConfig.runCommand(new ActivateActuatorEventsLauncherCommand(null));
         agentsConfig.runCommand(new ActivateCallStateEventsLauncherCommand(null));
     }
+
+    public SimpleState doSomethingRandom(Agent agent, FSM fsm, SimpleState prev, int i) {
+        int prob = ThreadLocalRandom.current().nextInt(0, 100);
+        int caseChoose = 0;
+
+        //Theres a 0.4 probability of getting lost in the house
+        if (prob >= 0 && prob < 32) {
+            caseChoose = 1;
+        } else if (prob >= 32 && prob < 64) {
+            caseChoose = 2;
+        } else if (prob >= 64 && prob < 96) {
+            caseChoose = 3;
+        } else if (prob >= 96 && prob <= 99) {
+            caseChoose = 4;
+        }
+
+        switch (caseChoose) {
+            case 1:
+                return doSomethingKitchen(agent, fsm, prev, i);
+                //break;
+            case 2:
+                return doSomethingLiving(agent, fsm, prev, i);
+                //break;
+            case 3:
+                return doSomethingBathroom(agent, fsm, prev, i);
+                //break;
+            case 4:
+                return doGetLost(agent, fsm, prev, i);
+        }
+        return null;
+    }
+
+    public SimpleState doSomethingKitchen(Agent agent, FSM fsm, SimpleState prev, int i) {
+        MoveToSpace moveToKitchen = new MoveToSpace(agent, "GoToKitchen" + i, "Kitchen");
+        fsm.registerTransition(prev, moveToKitchen);
+        UseObjectAutomaton useSink = new UseObjectAutomaton(agent, "Sink");
+        useSink.setFinishCondition(new TimerFinishedCondition(0, ThreadLocalRandom.current().nextInt(1, 2), 0));
+        fsm.registerTransition(moveToKitchen, useSink);
+        return useSink;
+    }
+
+    public SimpleState doSomethingLiving(Agent agent, FSM fsm, SimpleState prev, int i) {
+        MoveToSpace moveToLiving = new MoveToSpace(agent, "GoToLiving" + i, "LivingRoom");
+        fsm.registerTransition(prev, moveToLiving);
+        UseObjectAutomaton useSofa = new UseObjectAutomaton(agent, "ArmChair1");
+        useSofa.setFinishCondition(new TimerFinishedCondition(0, ThreadLocalRandom.current().nextInt(1, 2), 0));
+        fsm.registerTransition(moveToLiving, useSofa);
+        return useSofa;
+    }
+
+    public SimpleState doSomethingBathroom(Agent agent, FSM fsm, SimpleState prev, int i) {
+        MoveToSpace moveToBathroom = new MoveToSpace(agent, "GoToBathroom" + i, "BathRoom1");
+        fsm.registerTransition(prev, moveToBathroom);
+        UseObjectAutomaton useWC = new UseObjectAutomaton(agent, "WC1");
+        useWC.setFinishCondition(new TimerFinishedCondition(0, ThreadLocalRandom.current().nextInt(1, 2), 0));
+        fsm.registerTransition(moveToBathroom, useWC);
+        return useWC;
+    }
+
+    public SimpleState doGetLost(Agent agent, FSM fsm, SimpleState prev, int i) {
+        MoveToSpace moveToBathroom = new MoveToSpace(agent, "GoToBathroom" + i, "BathRoom1");
+        fsm.registerTransition(prev, moveToBathroom);
+        DoNothing wait = new DoNothing(agent, "wait" + i);
+        wait.setFinishCondition(new TimerFinishedCondition(0,0,1));;
+        fsm.registerTransition(moveToBathroom, wait);
+        return wait;
+    }
+
 
     @Override
     public String getTittle() {
@@ -235,6 +343,16 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         PresenceData pd = ps.getPresenceData();
         //Get sensor in array
         PresenceSensor sens = getPsByKey(ps.getId());
+
+        if (pd.isPresence()) {
+            try {
+                appendToFile(pd.getTimestamp()/1000 + " " + ps.getId() + " " + pd.isPresence());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /*
         //Convert to secs
         long now = pd.getTimestamp() / 1000;
 
@@ -260,7 +378,8 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
 
         //Reset time vars
         sens.lastToggle = now;
-        lastPresenceTimestamp = now;
+        lastPresenceTimestamp = now;*/
+
     }
 
     public void appendToFile(String data) throws IOException {

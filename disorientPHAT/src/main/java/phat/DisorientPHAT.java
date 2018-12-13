@@ -174,11 +174,12 @@ public class DisorientPHAT implements PHATInitializer, PHATCommandListener, Sens
         useSink1.setFinishCondition(new TimerFinishedCondition(0, 0, 1));
         MoveToSpace moveToLiving1 = new MoveToSpace(agent, "GoToLiving1", "LivingRoom");
         DoNothing wait1 = new DoNothing(agent, "wait1");
-        wait1.setFinishCondition(new TimerFinishedCondition(0,0,5));
+        wait1.setFinishCondition(new TimerFinishedCondition(0,5,0));
 
         //Create and populate Finite State Machine
         FSM fsm = new FSM(agent);
         fsm.registerStartState(moveToKitchen1);
+
         fsm.registerTransition(moveToKitchen1, useSink1);
         fsm.registerTransition(useSink1, moveToLiving1);
         fsm.registerTransition(moveToLiving1, wait1);
