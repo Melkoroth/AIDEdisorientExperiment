@@ -2,7 +2,7 @@
 /assets/
 /out/
 /*/target/
-/.idea/
+/*/.idea/
 *.iml
 *.log
 *.lck

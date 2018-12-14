@@ -1,6 +1,7 @@
 package phat;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -42,10 +43,14 @@ import phat.world.WorldAppState;
  * Phat Disorient Experiment
  * @author melkoroth
  */
-public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, SensorListener {
+public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandListener, SensorListener {
     static GUIPHATInterface phat;
 
-    private static String fileName = "nodisorient.txt";
+    private static LocalDateTime now = LocalDateTime.now();
+    private static String fileName = "experiment";
+    private static String fileExtension = ".txt";
+    private static String dateStr = "-" + now.getYear() + now.getMonthValue() + now.getDayOfMonth() + now.getHour() + now.getMinute() + now.getSecond();
+    private static String fileOut = fileName + dateStr + fileExtension;
 
     private final String bodyId = "Patient";
     private final String houseId = "House1";
@@ -59,37 +64,17 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
     private final String livingroom0ID = "PreSen-Living-1";
     private final String livingroom1ID = "PreSen-Living-3";
 
-    class PresenceSensor {
-        public String id;
-        public long lastToggle = 0;
-        public PresenceSensor(String id) { this.id = id; }
-    }
+    private final String[] sensorIDs = {bedroomID, kitchenID, hallID, bathroomID, livingroom0ID, livingroom1ID};
 
-    //Array of info of sensors
-    private final PresenceSensor pSensors[] = new PresenceSensor[] {
-            new PresenceSensor(bedroomID),
-            new PresenceSensor(kitchenID),
-            new PresenceSensor(hallID),
-            new PresenceSensor(bathroomID),
-            new PresenceSensor(livingroom0ID),
-            new PresenceSensor(livingroom1ID)
-    };
+    //Declare agent
+    Agent agent = new HumanAgent(bodyId);
+    //Create and populate Finite State Machine
+    FSM fsm = new FSM(agent);
 
-    //Stores general timestamp
-    long lastPresenceTimestamp;
-
-    private PresenceSensor getPsByKey(String key) {
-        for (int i = 0; i < pSensors.length; i++) {
-            if (pSensors[i].id.equals(key)) {
-                return pSensors[i];
-            }
-        }
-        return null;
-    }
 
     public static void main(String[] args) throws IOException {
         //String[] a = {"-record"};
-        NoDisorientPHAT sim = new NoDisorientPHAT();
+        DisorientExperimentPHAT sim = new DisorientExperimentPHAT();
         phat = new GUIPHATInterface(sim);//, new GUIArgumentProcessor());
         phat.setStatView(true);
         phat.setDisplayFPS(true);
@@ -102,11 +87,7 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         phat.hidePrettyLogger();
 
         //Start output file with column names
-        FileWriter fw = new FileWriter(fileName);
-        BufferedWriter bw = new BufferedWriter(fw);
-        bw.write("timestamp id elapsedGen elapsedPart status");
-        bw.newLine();
-        bw.close();
+        appendToFile("timestamp id elapsedGen elapsedPart status");
     }
 
     @Override
@@ -133,9 +114,9 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
     public void initDevices(DeviceConfigurator deviceConfig) {
         long now = phat.getSimTime().getTimeInMillis() / 1000;
         //lastPresenceTimestamp = now;
-        for (int i = 0; i < pSensors.length; i++) {
+        for (int i = 0; i < sensorIDs.length; i++) {
             //pSensors[i].lastToggle = now;
-            createPrenceSensor(pSensors[i].id);
+            createPrenceSensor(sensorIDs[i]);
         }
 
         AppStateManager stateManager = phat.app.getStateManager();
@@ -167,54 +148,12 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
 
     @Override
     public void initAgents(AgentConfigurator agentsConfig) {
-        //Declare agent
-        Agent agent = new HumanAgent(bodyId);
-
-
-
-        /*UseObjectAutomaton useSink2 = new UseObjectAutomaton(agent, "Sink");
-        useSink2.setFinishCondition(new TimerFinishedCondition(0, 5, 0));
-        MoveToSpace moveToLiving2 = new MoveToSpace(agent, "GoToLiving2", "LivingRoom");
-        DoNothing wait2 = new DoNothing(agent, "wait2");
-        wait2.setFinishCondition(new TimerFinishedCondition(0,0,5));*/
-
-        //Get some seconds
-        //int randomNum = ThreadLocalRandom.current().nextInt(30, 300);
-
-
-        //Create and populate Finite State Machine
-        FSM fsm = new FSM(agent);
-
-        //MoveToSpace moveToKitchen2 = new MoveToSpace(agent, "GoToKitchen1", "Kitchen");
-        //fsm.registerStartState(moveToKitchen2);
-
-        /*UseObjectAutomaton useSink2 = new UseObjectAutomaton(agent, "Sink");
-        useSink2.setFinishCondition(new TimerFinishedCondition(0, ThreadLocalRandom.current().nextInt(1, 5), 0));
-        fsm.registerTransition(moveToKitchen2, useSink2);
-        MoveToSpace moveToLiving2 = new MoveToSpace(agent, "GoToLiving2", "LivingRoom");
-        fsm.registerTransition(useSink2, moveToLiving2);
-        DoNothing wait2 = new DoNothing(agent, "wait2");
-        wait2.setFinishCondition(new TimerFinishedCondition(0,ThreadLocalRandom.current().nextInt(1, 5),0));
-        fsm.registerTransition(moveToLiving2, wait2);
-        MoveToSpace moveToBedroom2 = new MoveToSpace(agent, "GoToBedroom2", "BedRoom1RightSide");
-        fsm.registerTransition(useSink2, moveToLiving2);
-        fsm.registerTransition(wait2, moveToKitchen2);
-
-
-
-        useSink2.setFinishCondition(new TimerFinishedCondition(0, 0, ThreadLocalRandom.current().nextInt(1, 5)));
-        fsm.registerTransition(moveToKitchen2, useSink2);
-        fsm.registerTransition(useSink2, moveToLiving2);
-        fsm.registerTransition(moveToLiving2, wait2);
-        wait2.setFinishCondition(new TimerFinishedCondition(0,0,ThreadLocalRandom.current().nextInt(30, 300)));
-        fsm.registerTransition(wait2, moveToKitchen2);*/
-
         DoNothing waitzIni = new DoNothing(agent, "waitzIni");
         waitzIni.setFinishCondition(new TimerFinishedCondition(0,0,5));
         fsm.registerStartState(waitzIni);
 
         SimpleState prevState = waitzIni;
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 200; i++) {
             SimpleState state = doSomethingRandom(agent, fsm, prevState, i);
             prevState = state;
         }
@@ -239,36 +178,22 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
 
     public SimpleState doSomethingRandom(Agent agent, FSM fsm, SimpleState prev, int i) {
         int prob = ThreadLocalRandom.current().nextInt(0, 100);
-        int caseChoose = 0;
 
         //Theres a 0.4 probability of getting lost in the house
         if (prob >= 0 && prob < 32) {
-            caseChoose = 1;
+            return doSomethingKitchen(prev, i);
         } else if (prob >= 32 && prob < 64) {
-            caseChoose = 2;
+            return doSomethingLiving(prev, i);
         } else if (prob >= 64 && prob < 96) {
-            caseChoose = 3;
+            return doSomethingBathroom(prev, i);
         } else if (prob >= 96 && prob <= 99) {
-            caseChoose = 4;
-        }
-
-        switch (caseChoose) {
-            case 1:
-                return doSomethingKitchen(agent, fsm, prev, i);
-                //break;
-            case 2:
-                return doSomethingLiving(agent, fsm, prev, i);
-                //break;
-            case 3:
-                return doSomethingBathroom(agent, fsm, prev, i);
-                //break;
-            case 4:
-                return doGetLost(agent, fsm, prev, i);
+            //appendToFile("Gonna get lost!");
+            return doGetLost(prev, i);
         }
         return null;
     }
 
-    public SimpleState doSomethingKitchen(Agent agent, FSM fsm, SimpleState prev, int i) {
+    public SimpleState doSomethingKitchen(SimpleState prev, int i) {
         MoveToSpace moveToKitchen = new MoveToSpace(agent, "GoToKitchen" + i, "Kitchen");
         fsm.registerTransition(prev, moveToKitchen);
         UseObjectAutomaton useSink = new UseObjectAutomaton(agent, "Sink");
@@ -277,7 +202,7 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         return useSink;
     }
 
-    public SimpleState doSomethingLiving(Agent agent, FSM fsm, SimpleState prev, int i) {
+    public SimpleState doSomethingLiving(SimpleState prev, int i) {
         MoveToSpace moveToLiving = new MoveToSpace(agent, "GoToLiving" + i, "LivingRoom");
         fsm.registerTransition(prev, moveToLiving);
         UseObjectAutomaton useSofa = new UseObjectAutomaton(agent, "ArmChair1");
@@ -286,7 +211,7 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         return useSofa;
     }
 
-    public SimpleState doSomethingBathroom(Agent agent, FSM fsm, SimpleState prev, int i) {
+    public SimpleState doSomethingBathroom(SimpleState prev, int i) {
         MoveToSpace moveToBathroom = new MoveToSpace(agent, "GoToBathroom" + i, "BathRoom1");
         fsm.registerTransition(prev, moveToBathroom);
         UseObjectAutomaton useWC = new UseObjectAutomaton(agent, "WC1");
@@ -295,7 +220,7 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         return useWC;
     }
 
-    public SimpleState doGetLost(Agent agent, FSM fsm, SimpleState prev, int i) {
+    public SimpleState doGetLost(SimpleState prev, int i) {
         MoveToSpace moveToBathroom = new MoveToSpace(agent, "GoToBathroom" + i, "BathRoom1");
         fsm.registerTransition(prev, moveToBathroom);
         DoNothing wait = new DoNothing(agent, "wait" + i);
@@ -307,12 +232,12 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
 
     @Override
     public String getTittle() {
-        return "PHAT Presence No Disorient Experiment";
+        return "PHAT Presencen Disorient Detector Experiment";
     }
 
     @Override
     public String getDescription() {
-        return "This is a proof of concept simulation where the patient does not disorient";
+        return "This is a proof of concept simulation where the patient does disorient oocasionally";
     }
 
     //Called at init
@@ -341,53 +266,22 @@ public class NoDisorientPHAT implements PHATInitializer, PHATCommandListener, Se
         //Get sensor data
         PHATPresenceSensor ps = (PHATPresenceSensor)sensor;
         PresenceData pd = ps.getPresenceData();
-        //Get sensor in array
-        PresenceSensor sens = getPsByKey(ps.getId());
 
         if (pd.isPresence()) {
-            try {
-                appendToFile(pd.getTimestamp()/1000 + " " + ps.getId() + " " + pd.isPresence());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            appendToFile(pd.getTimestamp()/1000 + " " + ps.getId() + " " + pd.isPresence());
         }
+    }
 
-        /*
-        //Convert to secs
-        long now = pd.getTimestamp() / 1000;
-
-        System.out.println("**********");
-        System.out.print("Timestamp: " + now);
-        System.out.print(" | ID: " + ps.getId());
-        long elapsedGen = now - lastPresenceTimestamp;
-        //Reflect it's the first time we reflect this value
-        if (elapsedGen > 100000)
-            elapsedGen = -1;
-        System.out.print(" | Elapsed general: " + elapsedGen);
-        long elapsedPar = now - sens.lastToggle;
-        if (elapsedPar > 100000)
-            elapsedPar = -1;
-        System.out.print(" | Elapsed particular: " + elapsedPar);
-        System.out.println(" | State: " + pd.isPresence());
-
+    public static void appendToFile(String data) {
         try {
-            appendToFile(now + " " + ps.getId() + " " + elapsedGen + " " + elapsedPar + " " + pd.isPresence());
+            FileWriter fw = new FileWriter(fileOut, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(data);
+            bw.newLine();
+            bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        //Reset time vars
-        sens.lastToggle = now;
-        lastPresenceTimestamp = now;*/
-
-    }
-
-    public void appendToFile(String data) throws IOException {
-        FileWriter fw = new FileWriter(fileName, true);
-        BufferedWriter bw = new BufferedWriter(fw);
-        bw.write(data);
-        bw.newLine();
-        bw.close();
     }
 
     @Override
