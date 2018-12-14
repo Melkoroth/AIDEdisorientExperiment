@@ -71,7 +71,6 @@ public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandList
     //Create and populate Finite State Machine
     FSM fsm = new FSM(agent);
 
-
     public static void main(String[] args) throws IOException {
         //String[] a = {"-record"};
         DisorientExperimentPHAT sim = new DisorientExperimentPHAT();
@@ -87,7 +86,7 @@ public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandList
         phat.hidePrettyLogger();
 
         //Start output file with column names
-        appendToFile("timestamp id elapsedGen elapsedPart status");
+        appendToFile("timestamp id elapsedGen elapsedPart status actionName");
     }
 
     @Override
@@ -112,10 +111,8 @@ public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandList
 
     @Override
     public void initDevices(DeviceConfigurator deviceConfig) {
-        long now = phat.getSimTime().getTimeInMillis() / 1000;
-        //lastPresenceTimestamp = now;
+
         for (int i = 0; i < sensorIDs.length; i++) {
-            //pSensors[i].lastToggle = now;
             createPrenceSensor(sensorIDs[i]);
         }
 
@@ -158,8 +155,6 @@ public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandList
             prevState = state;
         }
 
-        //DoNothing waitz = new DoNothing(agent, "waitz");
-        //waitz.setFinishCondition(new TimerFinishedCondition(0,0,5));
         DoNothing waitzEnd = new DoNothing(agent, "waitzEnd");
         waitzEnd.setFinishCondition(new TimerFinishedCondition(0,0,5));
         fsm.registerFinalState(waitzEnd);
@@ -187,7 +182,6 @@ public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandList
         } else if (prob >= 64 && prob < 96) {
             return doSomethingBathroom(prev, i);
         } else if (prob >= 96 && prob <= 99) {
-            //appendToFile("Gonna get lost!");
             return doGetLost(prev, i);
         }
         return null;
@@ -221,7 +215,7 @@ public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandList
     }
 
     public SimpleState doGetLost(SimpleState prev, int i) {
-        MoveToSpace moveToBathroom = new MoveToSpace(agent, "GoToBathroom" + i, "BathRoom1");
+        MoveToSpace moveToBathroom = new MoveToSpace(agent, "GoGetLost" + i, "BathRoom1");
         fsm.registerTransition(prev, moveToBathroom);
         DoNothing wait = new DoNothing(agent, "wait" + i);
         wait.setFinishCondition(new TimerFinishedCondition(0,0,1));;
@@ -268,7 +262,7 @@ public class DisorientExperimentPHAT implements PHATInitializer, PHATCommandList
         PresenceData pd = ps.getPresenceData();
 
         if (pd.isPresence()) {
-            appendToFile(pd.getTimestamp()/1000 + " " + ps.getId() + " " + pd.isPresence());
+            appendToFile(pd.getTimestamp() + " " + ps.getId() + " " + pd.isPresence() + " " + fsm.getCurrentActionName());
         }
     }
 
